@@ -5,9 +5,18 @@
 #define FALSE 0
 #define EMPTY 0
 
-#define ORDER 32/*The degree of the tree.*/
+#define ORDER 32 //Ordem da Árvore
 #define POINTERS	(ORDER*2) //6
 #define KEYS		(POINTERS-1) //5
+
+/*
+#######################################
+# Aluno: João Pedro Mendonça de Souza #
+# Matrícula: 0035330				  #
+# Curso: Ciência da Computação	   	  #
+# Disciplina: Estrutura de Dados 2    #
+#######################################
+*/
 
 typedef unsigned char bool;
 
@@ -16,19 +25,18 @@ typedef struct node{
 	struct node* child_array[POINTERS];//vetor de ponteiros que apontam para o mesmo tipo de nó
 	unsigned int key_index;//aponta quantas posições estão ocupadas no vetor de inteiros
 	bool leaf;//indica se é o não um nó folha
-	//int primary_key;
 }Node;
 
 typedef struct result{
 	Node* node_pointer;
 	int key;
 	bool found;
-	unsigned int depth;
 }Result;
 
 typedef struct b_tree{
 	Node *root;
 	unsigned short order;
+	int height;
 }BTree;
 
 Node* create_node(){
@@ -51,7 +59,6 @@ Node* create_node(){
 
 	new->key_index = EMPTY;
 	new->leaf = TRUE;
-	//new->primary_key = cont;
 
 	return new;
 }
@@ -76,6 +83,7 @@ BTree* create_btree(){
 
 	new_root->order = ORDER;
 	new_root->root = head;
+	new_root->height = 1;
 
 	return new_root;
 }
@@ -119,29 +127,6 @@ void split_child(Node* dad_node, int i, Node* son_node){
 	dad_node->key_index++;
 }
 
-void print(Node* node){
-
-	printf("Key array:\n");
-	for (int i = 0; i < KEYS; i++){
-		printf("%d ",node->key_array[i]);
-	}
-	printf("\n");
-	printf("\n");
-
-	//printf("Indice %d\n",node->primary_key);
-	printf("Key index %d",node->key_index);
-	printf("\n");
-	printf("______________\n");
-
-	if(node->leaf){
-		printf("É folha\n");
-	}
-	else{
-		printf("Não é folha\n");
-	}
-	printf("\n");
-}
-
 void insert_nonfull(Node* node, int key){
 
 	int i = node->key_index;
@@ -179,9 +164,9 @@ Node* insert(int key, BTree* btree){
 		new->leaf = FALSE;
 		new->key_index = 0;
 		new->child_array[0] = root;
-		//new->primary_key = 0;
 		split_child(new,1,root);
 		insert_nonfull(new,key);
+		btree->height++;
 	}
 	else{
 		insert_nonfull(btree->root,key);//Caso não esteja, basta inserir o nó desejado
@@ -191,6 +176,7 @@ Node* insert(int key, BTree* btree){
 }
 
 Result* get_result(){
+
 	Result *ret = (Result*)malloc(sizeof(Result));
 
 	if(!ret){
@@ -201,7 +187,6 @@ Result* get_result(){
 	ret->node_pointer = NULL;
 	ret->key = 0;
 	ret->found = FALSE;
-	ret->depth = 0;
 
 	return ret;
 }
@@ -230,70 +215,83 @@ Result* search(int key, Node* node){
 	}
 	else{
 		Result* result = get_result();
-		//result->depth = result->depth + 1;
 		return search(key,node->child_array[i]);
+	}
+}
+
+void print(Node* node){
+
+	printf("Array de chaves: ");
+	for (int i = 0; i < KEYS; i++){
+		printf("%d ",node->key_array[i]);
+	}
+	printf("\n");
+	printf("\n");
+
+	//printf("Indice %d\n",node->primary_key);
+	printf("Número de chaves preenchidas: %d",node->key_index);
+	printf("\n");
+
+	if(node->leaf){
+		printf("Esse nó é folha!\n");
+	}
+	else{
+		printf("Esse nó não é folha\n");
+	}
+	printf("______________________________________\n");
+}
+
+void run_test(BTree* btree, int keys){
+
+	Result* rs;
+	int number;
+
+	printf("Testando com %d de chaves\n",keys);
+
+	for(int i = 1; i <= keys; i++){
+		btree->root = insert(i, btree);
+	}
+	printf("Essa árvore tem %d níveis de altura com %d de chaves\n\n",btree->height,keys);
+
+	printf("Raiz da Árvore:\n\n");
+	print(btree->root);
+
+	printf("Pesquise um número na Árvore!\n");
+	scanf("%d",&number);
+
+	rs = search(number,btree->root);
+
+	if(rs->found){
+		printf("Índice encontrado no nó abaixo:\n");
+		printf("______________________________________\n");
+		print(rs->node_pointer);
+		//printf("%u",rs->depth);
+	}
+	else{
+		printf("Índice não encontrado\n");
 	}
 }
 
 int main(int argc, char *argv[]){
 
-	//int todelete[] = {15, 19};
+	printf("\nA ordem da árvore atualmente é %d, para alterar, modifique a linha 8 do código\n\n",ORDER);
 
-	BTree* main = create_btree();
-	int i;
-	int number;
-	Result* rs;
+	//BTree* btree0 = create_btree();
+	//BTree* btree1 = create_btree();
+	//BTree* btree2 = create_btree();
+	BTree* btree3 = create_btree();
 
-	/*for(i = 0; i < 100; i++){
-		main->root = insert(i, main);
-	}*/
-	
-	/*
-	print(main->root->child_array[0]);
-	printf("_________________________\n");
-	print(main->root->child_array[1]);
-	printf("_________________________\n");
-	print(main->root->child_array[2]);
-	*/
+	//run_test(btree0,1000000);
+	//free(btree0);
 
-	for(i = 1; i <= 1000000; i++){
-		main->root = insert(i, main);
-	}
-	print(main->root);
-	printf("_________________________\n");
-	/*for(i = 0; i < 5000000; i++){
-		main->root = insert(i, main);
-	}*/
+	//run_test(btree1,2000000);
+	//free(btree1);
 
-	printf("Digite um número pra procurar\n");
-	scanf("%d",&number);
-	
-	rs = search(number,main->root);
+	//run_test(btree2,5000000);
+	//free(btree2);
 
-	if(rs->found){
-		printf("Encontrado!\n");
-		print(rs->node_pointer);
-		//printf("%u",rs->depth);
-	}
-
-	/*for(i = 0; i < 100; i+=10){
-		main->root = insert(i, main);
-	}
-	printf("Raiz da Árvore\n");
-	print(main->root);
-	printf("Filho 1 da raiz\n");
-	print(main->root->child_array[0]);
-	printf("Filho 2 da raiz\n");
-	print(main->root->child_array[1]);
-	printf("Filho 3 da raiz\n");
-	print(main->root->child_array[2]);
-	*/
-
-	/*for(i = 0; i < 8000000; i++){
-		main->root = insert(i, main);
-	}*/
-
-	free(main);
+	run_test(btree3,8000000);
+	free(btree3);
 
 	return 0;
 }
